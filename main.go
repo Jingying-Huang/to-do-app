@@ -4,7 +4,8 @@ import (
 	"html/template"
 	"net/http"
 
-	"./models"
+	"github.com/Jingying-Huang/to-do-app/models"
+
 	"github.com/gorilla/mux"
 )
 
