@@ -1,21 +1,17 @@
 package main
 
 import (
-	"context"
 	"html/template"
 	"net/http"
 
-	"github.com/go-redis/redis/v8"
+	"./models"
 	"github.com/gorilla/mux"
 )
 
-var client *redis.Client
 var templates *template.Template
 
 func main() {
-	client = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
+	models.Init()
 	templates = template.Must(template.ParseGlob("templates/*.html"))
 	r := mux.NewRouter()
 	r.HandleFunc("/", indexGetHandler).Methods("GET")
@@ -27,9 +23,10 @@ func main() {
 }
 
 func indexGetHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := context.TODO()
-	tasks, err := client.LRange(ctx, "tasks", 0, 10).Result()
+	tasks, err := models.GetTasks()
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal server error"))
 		return
 	}
 	templates.ExecuteTemplate(w, "index.html", tasks)
@@ -37,8 +34,12 @@ func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 
 func indexPostHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	ctx := context.TODO()
 	task := r.PostForm.Get("task")
-	client.LPush(ctx, "tasks", task)
+	err := models.PostTask(task)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal server error"))
+		return
+	}
 	http.Redirect(w, r, "/", 302)
 }

@@ -5,8 +5,13 @@
   </head>
   <body>
     <h1>Tasks</h1>
-    <form method="POST" class="form-inline">
-      <input type="text" class="input-large" placeholder="Add a Task" />
+    <form method="POST">
+      <input
+        name="task"
+        type="text"
+        class="input-large"
+        placeholder="Add a Task"
+      />
       <button type="submit" class="btn">Add</button>
     </form>
     {{ range .}}
