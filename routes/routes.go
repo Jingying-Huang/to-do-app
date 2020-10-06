@@ -29,7 +29,7 @@ func indexGetHandler(w http.ResponseWriter, r *http.Request) {
 
 func indexPostHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	task := r.PostForm.Get("task")
+	task := r.PostForm.Get("to-do")
 	err := models.PostTask(task)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
