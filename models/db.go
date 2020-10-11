@@ -1,13 +1,31 @@
 package models
 
 import (
-	"github.com/go-redis/redis/v8"
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
-var client *redis.Client
+type Task struct {
+	ID          string
+	Description string
+	Deadline    string
+	Priority    string
+}
+
+var Db *sql.DB
 
 func Init() {
-	client = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
+	var err error
+	Db, err = sql.Open("postgres", "postgres://jyfhuang:password@localhost/myworld?sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = Db.Ping(); err != nil {
+		panic(err)
+	}
+	fmt.Println("You connected to your database.")
+
 }

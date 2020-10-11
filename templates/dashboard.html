@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        h1 {
+        position: relative;
+        left: 20px;
+        }
+        html, body, p {
+            padding: 0;
+            border: 0;
+            margin: 0;
+        }
+        body {
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: left;
+            align-items: left;
+            height: 100vh;
+        }
+        p {
+            margin-left: 4rem;
+            font-size: 1.5rem;
+            color: black;
+          }
+        .link {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>TODO</h1>
+    <p class="link"><a href="/dashboard/create">Add a Task</a></p>
+{{range .}}
+<p><a href="/dashboard/show?id={{.ID}}">{{.ID}}</a> - {{.Description}} - {{.Deadline}} - {{.Priority}} - <a href="/dashboard/update?id={{.ID}}">update</a>  - <a href="/dashboard/delete/process?id={{.ID}}">delete</a> </p>
+{{end}}
+
+</body>
+</html>
