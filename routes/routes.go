@@ -8,6 +8,7 @@ import (
 	"github.com/Jingying-Huang/to-do-app/utils"
 )
 
+// NewRouter ... handle various requests including create, update and delete
 func NewRouter() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/dashboard", dashboardIndex)
@@ -139,6 +140,7 @@ func tasksUpdateForm(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.ExecuteTemplate(w, "update.html", tk)
 }
+
 func tasksUpdateProcess(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
