@@ -14,9 +14,9 @@ func NewRouter() {
 	http.HandleFunc("/dashboard/show", tasksShow)
 	http.HandleFunc("/dashboard/create", tasksCreateForm)
 	http.HandleFunc("/dashboard/create/process", tasksCreateProcess)
-	// http.HandleFunc("/dashboard/update", tasksUpdateForm)
-	// http.HandleFunc("/dashboard/update/process", tasksUpdateProcess)
-	// http.HandleFunc("/dashboard/delete/process", tasksDeleteProcess)
+	http.HandleFunc("/dashboard/update", tasksUpdateForm)
+	http.HandleFunc("/dashboard/update/process", tasksUpdateProcess)
+	http.HandleFunc("/dashboard/delete/process", tasksDeleteProcess)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -67,7 +67,7 @@ func tasksShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := models.Db.QueryRow("SELECT * FROM books WHERE id = $1", id)
+	row := models.Db.QueryRow("SELECT * FROM tasks WHERE id = $1", id)
 
 	tk := models.Task{}
 	err := row.Scan(&tk.ID, &tk.Description, &tk.Deadline, &tk.Priority)
@@ -98,10 +98,10 @@ func tasksCreateProcess(w http.ResponseWriter, r *http.Request) {
 	tk.ID = r.FormValue("id")
 	tk.Description = r.FormValue("description")
 	tk.Deadline = r.FormValue("deadline")
-	p := r.FormValue("priority")
+	tk.Priority = r.FormValue("priority")
 
 	// validate form values
-	if tk.ID == "" || tk.Description == "" || tk.Deadline == "" || p == "" {
+	if tk.ID == "" || tk.Description == "" || tk.Deadline == "" || tk.Priority == "" {
 		http.Error(w, http.StatusText(400), http.StatusBadRequest)
 		return
 	}
@@ -111,4 +111,78 @@ func tasksCreateProcess(w http.ResponseWriter, r *http.Request) {
 
 	// confirm insertion
 	utils.ExecuteTemplate(w, "created.html", tk)
+}
+
+func tasksUpdateForm(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.FormValue("id")
+	if id == "" {
+		http.Error(w, http.StatusText(400), http.StatusBadRequest)
+		return
+	}
+
+	row := models.Db.QueryRow("SELECT * FROM tasks WHERE id = $1", id)
+
+	tk := models.Task{}
+	err := row.Scan(&tk.ID, &tk.Description, &tk.Deadline, &tk.Priority)
+	switch {
+	case err == sql.ErrNoRows:
+		http.NotFound(w, r)
+		return
+	case err != nil:
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		return
+	}
+	utils.ExecuteTemplate(w, "update.html", tk)
+}
+func tasksUpdateProcess(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+
+	// get form values
+	tk := models.Task{}
+	tk.ID = r.FormValue("id")
+	tk.Description = r.FormValue("description")
+	tk.Deadline = r.FormValue("deadline")
+	tk.Priority = r.FormValue("priority")
+
+	// validate form values
+	if tk.ID == "" || tk.Description == "" || tk.Deadline == "" || tk.Priority == "" {
+		http.Error(w, http.StatusText(400), http.StatusBadRequest)
+		return
+	}
+
+	// insert values
+	models.Db.Exec("UPDATE tasks SET id = $1, description=$2, deadline=$3, priority=$4 WHERE id=$1;", tk.ID, tk.Description, tk.Deadline, tk.Priority)
+
+	// confirm insertion
+	utils.ExecuteTemplate(w, "updated.html", tk)
+}
+
+func tasksDeleteProcess(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.FormValue("id")
+	if id == "" {
+		http.Error(w, http.StatusText(400), http.StatusBadRequest)
+		return
+	}
+
+	// delete task
+	_, err := models.Db.Exec("DELETE FROM tasks WHERE id=$1;", id)
+	if err != nil {
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
